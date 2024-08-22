@@ -1,4 +1,4 @@
-(ns snake.game9
+(ns snake.game08
   (:import
    (javax.swing JFrame JPanel Timer)
    (java.awt.event ActionListener KeyEvent KeyListener)
@@ -12,15 +12,12 @@
 (def y-> (ref 0))
 (def apple (ref (vector 500 400)))
 
-(defn step [snake direction grow?]
-  (let [whole-snake (cons (+ (first snake) (* direction 10)) snake)]
-    (if grow?
-      whole-snake
-      (butlast whole-snake))))
+(defn step [snake direction]
+  (butlast (cons (+ (first snake) (* direction 10)) snake)))
 
-(defn move [panel grow?]
-  (dosync (alter x step @x-> grow?)
-          (alter y step @y-> grow?))
+(defn move [panel]
+  (dosync (alter x step @x->)
+          (alter y step @y->))
   (.repaint panel)
   (println "x:" @x "y:" @y))
 
@@ -40,18 +37,15 @@
   (doseq [[x y] (partition 2 (interleave @x @y))]
     (.fillRect g x y 10 10)))
 
-(defn eat? []
-  (if (and (= (first @x) (first @apple))
-           (= (first @y) (second @apple)))
-    (dosync (ref-set apple (vector (* (rand-int 59) 10) (* (rand-int 49) 10))))
-    false))
-
 (defn game []
   (let [panel (proxy [JPanel ActionListener KeyListener] []
                 (keyPressed [e]
                   (change-direction e))
                 (actionPerformed [e]
-                  (move this (eat?)))
+                  (move this)
+                  (when (and (= (first @x) (first @apple))
+                             (= (first @y) (second @apple)))
+                    (dosync (ref-set apple (vector (* 10 (rand-int 59)) (* 10 (rand-int 49)))))))
                 (paintComponent [g]
                   (paint g))
                 (keyReleased [e])
@@ -67,8 +61,8 @@
 
 (game)
 
-;; Add a Grow? Parameter
-;; Line 13: 'step' function now takes grow? parameter
-;; Line 19: 'move' function now takes grow? parameter
-;; Line 43-47: 'eat?' function now returns true if snake eats apple
-;; Line 52: 'move' function includes call to 'eat?' function to decide whether to grow snake
+;; Functions and New Apple
+;; Lines 18-22, 46: 'move' function
+;; Lines 24-29, 44: 'change-direction' function
+;; Lines 31-38, 50: 'paint' function
+;; Lines 46-48: When snake eats apple, create new apple

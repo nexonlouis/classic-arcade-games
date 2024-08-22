@@ -1,4 +1,4 @@
-(ns snake.game4
+(ns snake.game04
   (:import
    (javax.swing JFrame JPanel Timer)
    (java.awt.event ActionListener KeyEvent KeyListener)))

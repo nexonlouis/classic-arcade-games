@@ -1,4 +1,4 @@
-(ns game13
+(ns snake.game13
   (:import
    (javax.swing JFrame JPanel Timer JOptionPane)
    (java.awt.event ActionListener KeyEvent KeyListener)

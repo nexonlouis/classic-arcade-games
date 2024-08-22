@@ -1,4 +1,4 @@
-(ns snake.game1
+(ns snake.game01
   (:import
    (javax.swing JFrame JPanel)))
 

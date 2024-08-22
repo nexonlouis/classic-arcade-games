@@ -1,4 +1,4 @@
-(ns breakout.game8
+(ns breakout.game07
   (:import
    (javax.swing JFrame JPanel Timer)
    (java.awt.event ActionListener KeyListener)
@@ -16,7 +16,7 @@
 (def game-state (atom {:paddle 270
                        :paddle-> 1
                        :x 30
-                       :y 420
+                       :y 20
                        :x-> 1
                        :y-> 1
                        :wall (apply vector (take (* (wall :rows) (wall :columns)) (repeat 1)))}))
@@ -44,7 +44,7 @@
   (swap! game-state update :x + (* 1 (@game-state :x->)))
   (swap! game-state update :y + (* 1 (@game-state :y->))))
 
-(defn check-game-rules [] 
+(defn check-game-rules []
   (cond
     (<= (border :paddle :left) (border :field :left)) (swap! game-state assoc :paddle-> 1)
     (<= (border :field :right) (border :paddle :right)) (swap! game-state assoc :paddle-> -1)
@@ -54,58 +54,16 @@
     (<= (border :paddle :top) (border :ball :bottom)) (swap! game-state assoc :y-> -1))
   (doseq [row (range (wall :rows))
           column (range (wall :columns))]
-    (let [index (+ column (* row (wall :columns)))
-          brick-still-there? (= 1 (nth (@game-state :wall) index))
-          ball-moving-down? (= 1 (@game-state :y->))
-          ball-contacts-brick-top? (<= (border :ball :top) (border :brick :top column row) (border :ball :bottom))
-          ball-inside-column? (<= (border :brick :left column row) (border :ball :left) (border :brick :right column row))
-          ball-overlaps-left-brick? (<= (border :ball :left) (border :brick :right column row) (border :ball :right))
-          ball-overlaps-right-brick? (<= (border :ball :left) (border :brick :left column row) (border :ball :right))
-          ball-moving-up? (= -1 (@game-state :y->))
-          ball-contacts-brick-bottom? (<= (border :ball :top) (border :brick :bottom column row) (border :ball :bottom))
-          ball-moving-right? (= 1 (@game-state :x->))
-          ball-contacts-brick-left? (<=  (border :ball :left) (border :brick :left column row) (border :ball :right))
-          ball-inside-row? (<= (border :brick :top column row) (border :ball :top) (border :brick :bottom column row))
-          ball-overlaps-row-top? (<= (border :ball :top) (border :brick :bottom column row) (border :ball :bottom))
-          ball-overlaps-row-bottom? (<= (border :ball :top) (border :brick :top column row) (border :ball :bottom))
-          ball-moving-left? (= -1 (@game-state :x->))
-          ball-contacts-brick-right? (<= (border :ball :left) (border :brick :right column row) (border :ball :right))]
+    (let [index (+ column (* row (wall :columns)))]
       (cond
-        (and ball-moving-down?
-             brick-still-there?
-             ball-contacts-brick-top?
-             (or ball-inside-column?
-                 ball-overlaps-left-brick?
-                 ball-overlaps-right-brick?))
+        (and (= 1 (@game-state :y->))
+             (= 1 (nth (@game-state :wall) index))
+             (<= (border :brick :top column row) (border :ball :bottom))
+             (or (<= (border :brick :left column row) (border :ball :left) (border :brick :right column row))
+                 (<= (border :ball :left) (border :brick :right column row) (border :ball :right))
+                 (<= (border :ball :left) (border :brick :left column row) (border :ball :right))))
         (do
-          (swap! game-state assoc :y-> -1)
-          (swap! game-state update :wall assoc index 0))
-        (and ball-moving-up?
-             brick-still-there?
-             ball-contacts-brick-bottom?
-             (or ball-inside-column?
-                 ball-overlaps-left-brick?
-                 ball-overlaps-right-brick?))
-        (do
-          (swap! game-state assoc :y-> 1)
-          (swap! game-state update :wall assoc index 0))
-        (and ball-moving-right?
-             brick-still-there?
-             ball-contacts-brick-left?
-             (or ball-inside-row?
-                 ball-overlaps-row-top?
-                 ball-overlaps-row-bottom?))
-        (do
-          (swap! game-state assoc :x-> -1)
-          (swap! game-state update :wall assoc index 0))
-        (and ball-moving-left?
-             brick-still-there?
-             ball-contacts-brick-right?
-             (or ball-inside-row?
-                 ball-overlaps-row-top?
-                 ball-overlaps-row-bottom?))
-        (do
-          (swap! game-state assoc :x-> 1)
+          (swap! game-state update :y-> * -1)
           (swap! game-state update :wall assoc index 0))))))
 
 (defn paint [g]
@@ -151,8 +109,19 @@
 
 (game)
 
-;; Complete Brick Contact Rules
-;; Line 19: Move ball back below wall to test the complete brick contact rules
-;; Lines 58-72: "Label" condition rules with 'let'
-;; Lines 83-109: Add brick contact rules for other 3 orientations of ball movement(ball-moving-up?, ball-moving-right?, ball-moving-left?)
-;; Lines 60, 65, 67, 72: Add far ball border side to rule to orient ball to wall
+;; Add First Brick Contact Rule
+(comment
+  (doseq [row (range (wall :rows))
+          column (range (wall :columns))]
+    (println "column:" column "row:" row "index:" (+ column (* row (wall :columns))))))
+;; Line 19: Start ball above wall to test brick contact rule
+;; Lines 55-57: Check every brick to see 
+;; Line 59: if while the ball is moving down 
+;; Line 60: and the brick is still there, 
+;; Line 61: and the bottom of the ball falls below the top of the brick(remember our reverse y orientation)
+;; Line 62: and either the ball is inside the brick column(both ball borders are between the brick borders)
+;; Line 63: or the ball overlaps the brick column that comes after(its left border is between the ball borders)
+;; Line 64: or the ball overlaps the brick column that comes before(its right border is between the ball borders)
+;; Line 66: If so, reverse the ball's y direction 
+;; Line 67: and remove the brick from the wall
+;; Lines 83, 84: Paint ball after wall so it doesn't vanish behind the invisible bricks

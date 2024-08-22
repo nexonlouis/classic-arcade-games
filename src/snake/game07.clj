@@ -1,14 +1,16 @@
-(ns snake.game6
+(ns snake.game07
   (:import
    (javax.swing JFrame JPanel Timer)
-   (java.awt.event ActionListener KeyEvent KeyListener)))
+   (java.awt.event ActionListener KeyEvent KeyListener)
+   (java.awt Color)))
 
-(def frame (doto (new JFrame "Snake Game")
+(def frame (doto (JFrame. "Snake Game")
              (.setDefaultCloseOperation JFrame/EXIT_ON_CLOSE)))
 (def x (ref (list 300 290 280)))
 (def y (ref (list 200 200 200)))
 (def x-> (ref 1))
 (def y-> (ref 0))
+(def apple (ref (vector 500 400)))
 
 (defn step [snake direction]
   (butlast (cons (+ (first snake) (* direction 10)) snake)))
@@ -27,6 +29,11 @@
                   (.repaint this)
                   (println "x:" @x "y:" @y))
                 (paintComponent [g]
+                  (.setColor g Color/GREEN)
+                  (.fillRect g 0 0 600 500)
+                  (.setColor g Color/RED)
+                  (.fillRect g (first @apple) (second @apple) 10 10)
+                  (.setColor g Color/BLUE)
                   (doseq [[x y] (partition 2 (interleave @x @y))]
                     (.fillRect g x y 10 10)))
                 (keyReleased [e])
@@ -34,7 +41,7 @@
 
     (doto panel
       (.addKeyListener panel))
-    (.start (new Timer 250 panel))
+    (.start (Timer. 250 panel))
     (.add (.getContentPane frame) panel)
     (.setSize frame 600 500)
     (.setFocusable panel true)
@@ -42,20 +49,9 @@
 
 (game)
 
-;; Make the Snake Move
-;; https://clojuredocs.org/clojure.core/first
-;; https://clojuredocs.org/clojure.core/cons
-;; https://clojuredocs.org/clojure.core/butlast
-;; https://clojuredocs.org/clojure.core/condp
-;; Lines 13, 14: 'step' function returns new snake, with head moved in chosen direction, with last dot removed
-;; Line 19: Slightly more concise condition function
-;; Lines 37 Remove comment to start Timer
-
-(comment
-  (let [snake (list 300 310 320)
-        direction -1]
-    (first snake)
-    (+ (first snake) (* direction 10))
-    (cons (+ (first snake) (* direction 10)) snake)
-    (butlast (cons (+ (first snake) (* direction 10)) snake)))
-  )
+;; Add Apple and Colors
+;; https://clojuredocs.org/clojure.core/vector
+;; https://clojure.org/reference/java_interop#_alternative_macro_syntax
+;; Lines 7, 44: Dot notation replaces 'new' function for slightly more concise syntax for creating javax.swing objects in Clojure
+;; Line 11: Create apple as 'ref' to a 'vector' of two coordinate values
+;; Lines 5, 32-38: Set Colors, paint background, apple and snake in color
